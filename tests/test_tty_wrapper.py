@@ -19,8 +19,12 @@ SUPERVISOR = """
 import fcntl, json, os, subprocess, sys, termios
 fcntl.ioctl(0, termios.TIOCSCTTY, 0)
 before = os.tcgetpgrp(0)
-child = subprocess.run(sys.argv[1:], input='request\\n', capture_output=True,
-                       text=True, timeout=10)
+try:
+    child = subprocess.run(sys.argv[1:], input='request\\n', capture_output=True,
+                           text=True, timeout=10)
+except subprocess.TimeoutExpired as error:
+    raise RuntimeError(f'Launcher timed out: stdout={error.stdout!r}, '
+                       f'stderr={error.stderr!r}') from error
 print(json.dumps(dict(before=before, after=os.tcgetpgrp(0),
                      stdout=child.stdout, stderr=child.stderr, code=child.returncode)))
 """
@@ -86,12 +90,12 @@ class TTYWrapperTests(unittest.TestCase):
                     start_new_session=True,
                     env=env,
                     text=True,
-                    check=True,
                     timeout=15,
                 )
             finally:
                 os.close(slave)
                 os.close(master)
+            self.assertEqual(result.returncode, 0, result.stderr)
             report = json.loads(result.stdout)
             payload = json.loads(report["stdout"].splitlines()[-1])
             self.assertEqual(report["code"], 17)
