@@ -9,13 +9,23 @@
 [![Claude Code + Codex](https://img.shields.io/badge/agents-Claude_Code_%2B_Codex-F97316)](#install-the-plugin)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Give Claude Code and Codex the tools to operate your Codemagic builds. Find an
+Give your coding agent the tools to operate your Codemagic builds. Find an
 app, select a workflow, start a build from a branch or tag, inspect the result,
 and locate its artifacts—all through the official Codemagic REST API.
 
-One shared skill works in both clients. Its bundled Python CLI has **zero runtime
-dependencies** and also runs on its own. No MCP server or background service is
-required.
+The API skill's bundled Python CLI has **zero runtime dependencies** and also
+runs on its own. No MCP server or background service is required.
+
+The package contains two portable skills:
+
+- **`codemagic`** operates apps, workflows, builds and artifacts.
+- **`codemagic-signing`** diagnoses iOS/Android signing and helps configure an
+  existing project while preserving its signing identity. It distinguishes
+  provisioning, Gradle wiring, store permissions and runtime certificate issues.
+
+The signing skill complements the official
+[codemagic-init](https://docs.codemagic.io/troubleshooting/codemagic-init/) setup
+tool. It does not provision account credentials or start builds merely by loading.
 
 > “Show the latest failed build for my app and which steps failed.”
 >
@@ -25,8 +35,9 @@ required.
 
 ## Install the plugin
 
-Requires Python 3.11+ and a current Claude Code or Codex client with plugin support.
-The plugin includes the CLI; agents can run the bundled script directly.
+API commands require Python 3.11+ and normal shell access. Use a current client
+with the skill or plugin support described below. The package includes the CLI;
+agents can run the bundled script directly.
 
 ### Claude Code
 
@@ -48,9 +59,44 @@ codex plugin add codemagic@codemagic-tools
 Start a new session and select the `codemagic` skill from the plugin. You can
 also ask directly: “Use the Codemagic skill to list my apps.”
 
-### Install only the skill
+### GitHub Copilot CLI
 
-Copy the self-contained `skills/codemagic` folder into your client's user skill
+```sh
+copilot plugin install HelgeSverre/codemagic-skill
+```
+
+The existing Agent Plugins manifest and `skills/` directory work directly.
+
+### Gemini CLI
+
+```sh
+gemini skills install https://github.com/HelgeSverre/codemagic-skill.git --path skills
+```
+
+Gemini installs the skills directly; it does not need an extension wrapper.
+Workspace installations also require a trusted workspace. Skill activation and
+shell execution remain subject to Gemini's normal consent and permissions.
+
+### Other agent harnesses
+
+OpenCode, Cursor, Amp, Pi, Goose and current Windsurf/Devin support the portable
+skill folder. See the [support matrix and installation recipes](docs/agent-support.md)
+for tested discovery results, supported paths and limitations. Cline uses its
+own documented skill directory.
+
+The Vercel Skills CLI also discovers this repository. List available skills first,
+then choose a target rather than installing into every detected agent:
+
+```sh
+npx skills add HelgeSverre/codemagic-skill --list
+npx skills add HelgeSverre/codemagic-skill --skill codemagic --agent amp --global
+```
+
+For signing guidance, select `--skill codemagic-signing`.
+
+### Install only the skills
+
+Copy a self-contained folder under `skills/` into your client's user skill
 directory. This works without plugin support:
 
 ```sh
@@ -58,6 +104,8 @@ git clone https://github.com/HelgeSverre/codemagic-skill.git
 mkdir -p ~/.agents/skills ~/.claude/skills
 cp -R codemagic-skill/skills/codemagic ~/.agents/skills/codemagic
 cp -R codemagic-skill/skills/codemagic ~/.claude/skills/codemagic
+# Optional companion skill, installed independently in the same way:
+cp -R codemagic-skill/skills/codemagic-signing ~/.agents/skills/codemagic-signing
 ```
 
 Use either the plugin or the standalone skill in each client to avoid duplicate

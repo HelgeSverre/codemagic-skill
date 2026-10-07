@@ -76,3 +76,36 @@ connector, Codex cloud runtime, or other agent host was tested.
 Authentication and read-only endpoints were verified against the official API
 during initial development. Credentials and account-specific results are kept
 outside the repository. No live build is required to repeat the package tests.
+
+## Additional harness checks
+
+The 2026-10-07 distribution survey added these local discovery checks. They did
+not install into the user's global skill directories, invoke a model, or contact
+Codemagic. Sources and installation recipes are in [agent support](agent-support.md).
+
+| Client | Version | Observed result |
+| --- | --- | --- |
+| GitHub Copilot CLI | 1.0.93-2 | `--plugin-dir` discovered the plugin; `skill list --json` found both bundled skills |
+| Gemini CLI | 0.61.0 | Workspace-scoped skill install in an isolated Gemini home copied `codemagic` and its resources; discovery succeeded after trusting the temporary workspace; bundled CLI returned 1.0.0 |
+| OpenCode | 1.18.30 | `--pure debug skill` with an isolated configuration found the canonical `codemagic` skill and parsed its instructions |
+| Amp | 0.0.1791173172-g3e7691 | `amp skills list --json` in a temporary `.agents/skills` workspace found both skills as `workspace-agents` |
+
+Pi, Cursor, Windsurf/Devin, Goose and Cline have documentation-backed recipes;
+they were not executed. No additional harness has been verified here for live
+API credentials, hosted operation or actual build submission.
+
+## Signing skill behavior checks
+
+Two independent agent evaluations used only synthetic configuration and the
+new skill's platform reference. Neither had account access or mutation permission.
+
+- **iOS extension + App Groups:** identified the missing extension profile and
+  stale main profile, retained the working distribution identity, and recommended
+  checking existing Apple profiles before authorized profile repair/import.
+- **Android sign-in only failing from Play:** identified the missing OAuth
+  package/certificate pairing for the Play app-signing key; retained the valid
+  upload keystore and publishing service account.
+
+These checks exercise diagnosis and scope decisions. They do not prove an actual
+app was signed, a store accepted a new configuration, or that the skill
+outperforms an agent without it. No real signing material was used.

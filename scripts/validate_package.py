@@ -34,12 +34,14 @@ def validate():
             assert (ROOT / location).resolve() == ROOT
             assert plugin["name"] == manifest["name"]
             assert plugin.get("version", version) == version
-    skill = ROOT / "skills/codemagic"
-    text = (skill / "SKILL.md").read_text()
-    metadata = yaml.safe_load(text.split("---", 2)[1])
-    assert metadata["name"] == "codemagic" and metadata["description"]
-    for link in re.findall(r"\]\((references/[^)]+)\)", text):
-        assert (skill / link).is_file(), f"Missing skill reference: {link}"
+    for skill in sorted((ROOT / "skills").iterdir()):
+        if not skill.is_dir():
+            continue
+        text = (skill / "SKILL.md").read_text()
+        metadata = yaml.safe_load(text.split("---", 2)[1])
+        assert metadata["name"] == skill.name and metadata["description"]
+        for link in re.findall(r"\]\((references/[^)]+)\)", text):
+            assert (skill / link).is_file(), f"Missing skill reference: {link}"
     for path in (ROOT / "skills").rglob("*"):
         if path.is_file() and path.suffix in (".md", ".py", ".yaml"):
             contents = path.read_text()

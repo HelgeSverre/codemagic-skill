@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,14 @@ class DistributionTests(unittest.TestCase):
                     any("__pycache__" in name or ".env" in name for name in archive.namelist())
                 )
                 archive.extractall(extracted)
+            skill_names = {path.parent.name for path in (ROOT / "skills").glob("*/SKILL.md")}
+            installed_names = {
+                path.parent.name for path in (extracted / "skills").glob("*/SKILL.md")
+            }
+            self.assertEqual(installed_names, skill_names)
+            for entrypoint in (extracted / "skills").glob("*/SKILL.md"):
+                for reference in re.findall(r"\]\((references/[^)]+)\)", entrypoint.read_text()):
+                    self.assertTrue((entrypoint.parent / reference).is_file(), reference)
             script = extracted / "skills/codemagic/scripts/codemagic_api.py"
             env = {
                 key: value
