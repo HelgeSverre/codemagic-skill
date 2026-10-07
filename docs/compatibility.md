@@ -157,3 +157,24 @@ forward that test variable. These checks did not start or cancel a build.
 CI repeats extracted-plugin launcher checks using the built wheel and a fresh
 uv cache. Real-host registration is a separate manual smoke test; CI does not
 claim to run authenticated Codex or Claude sessions on every operating system.
+
+## Terminal ownership regression (1.3.1)
+
+Verified on macOS on **2026-10-07**:
+
+- A custom `zsh -ic` credential launcher temporarily took the host's foreground
+  terminal while loading startup files, even with piped MCP stdin/stdout.
+- Changing that launcher to `zsh +m -ic` preserved terminal ownership and
+  authenticated MCP access. Claude Code 2.1.292 started successfully in both
+  classic and fullscreen rendering modes after the repair.
+- The extracted plugin's new `with_zsh_env.sh` passed a real PTY regression test,
+  checking ownership inside `.zshrc` as well as after startup. A plain `zsh -ic`
+  negative control demonstrated the original takeover. The test also checked
+  exports, stdin, stdout isolation, argument boundaries, and exit status.
+- All three bundled MCP declarations launched the built 1.3.1 wheel through uvx,
+  exposed 11 tools, and passed offline build previews.
+
+The terminal tests run on macOS/Linux with zsh and skip Windows, where this
+shell helper does not apply. The native declarations continue to launch uvx
+directly. The setup skill describes repairing existing custom launchers;
+package installation does not alter those user-owned files.

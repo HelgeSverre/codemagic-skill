@@ -132,7 +132,7 @@ The Claude Code and Codex plugins register MCP automatically. A separate
 The bundled configuration runs:
 
 ```sh
-uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.1' codemagic-mcp
 ```
 
 The host manages this process; running it directly waits for MCP messages.
@@ -150,6 +150,12 @@ If you previously added a standalone `codemagic` server, verify the plugin's
 connection and authentication before removing that duplicate. See
 [MCP setup](https://github.com/HelgeSverre/codemagic-skill/blob/main/docs/mcp.md)
 for migration, other clients, local development, credentials, and verification.
+
+If Claude suspends with `suspended (tty input)`, check an older custom zsh
+credential launcher. Version 1.3.1 adds a tested wrapper and repair guidance;
+updating the plugin alone cannot rewrite an existing custom launcher. Follow
+the [terminal suspension fix](https://github.com/HelgeSverre/codemagic-skill/blob/main/docs/mcp.md#claude-suspends-with-suspended-tty-input)
+or ask your agent to use `codemagic-setup`.
 
 ## Authentication
 

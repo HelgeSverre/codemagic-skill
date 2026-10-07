@@ -26,7 +26,7 @@ user requests setup or troubleshooting.
 2. Warm the release's environment and check the executable:
 
    ```sh
-   uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp --version
+   uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.1' codemagic-mcp --version
    ```
 
    First launch requires network access to PyPI or a configured package mirror.
@@ -54,6 +54,15 @@ login on macOS/Linux. The native Codex manifest forwards those variable names
 and `XDG_CONFIG_HOME`; the variables must exist in the host process environment.
 GUI apps may not inherit an interactive shell's exports.
 
+Keep the native MCP command as direct `uvx`. Do not introduce `zsh -ic` or
+`zsh -ilc` credential wrappers: interactive job control can take the host's
+foreground terminal during startup, suspending Claude with `SIGTTIN` and leaking
+terminal replies into its shell prompt. Redirecting stdin/stdout does not prevent
+this. If an existing custom launcher needs shell exports, change its invocation
+to `zsh +m -ic` (or `zsh +m -ilc`) before restarting the host; keep startup output
+on stderr and MCP JSON on stdout. Disabling job control inside the `-c` command
+is too late. Do not disable job control in the user's parent shell.
+
 Reuse the user's existing credential source. Never print tokens, inspect shell
 startup files to extract them, or put values in plugin manifests, tool arguments,
 or chat. If the token exists only in terminal startup configuration, launch the
@@ -61,7 +70,7 @@ host from that environment or have the user run this hidden-input login in
 their own terminal on macOS/Linux:
 
 ```sh
-uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools==1.3.0' codemagic-api auth login
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools==1.3.1' codemagic-api auth login
 ```
 
 Login validates and saves a plaintext token with mode 0600 at
@@ -76,8 +85,8 @@ register the same command with that client's documented MCP settings. For a
 standalone installation in Claude Code or Codex:
 
 ```sh
-claude mcp add --scope user --transport stdio codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
-codex mcp add codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
+claude mcp add --scope user --transport stdio codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.1' codemagic-mcp
+codex mcp add codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.1' codemagic-mcp
 ```
 
 Configure only the requested host. For standalone Codex, set

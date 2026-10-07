@@ -30,7 +30,7 @@ def build(destination):
         files.extend(
             p
             for p in (ROOT / folder).rglob("*")
-            if p.is_file() and p.suffix in (".py", ".md", ".yaml", ".png")
+            if p.is_file() and p.suffix in (".py", ".sh", ".md", ".yaml", ".png")
         )
     with ZipFile(target, "w", compression=ZIP_DEFLATED) as archive:
         for path in sorted(files):

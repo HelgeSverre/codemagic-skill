@@ -85,7 +85,7 @@ class DistributionTests(unittest.TestCase):
                 text=True,
                 check=True,
             )
-            self.assertEqual(result.stdout.strip(), "1.3.0")
+            self.assertEqual(result.stdout.strip(), "1.3.1")
 
     def test_environment_auth_on_all_platforms(self):
         from unittest.mock import patch

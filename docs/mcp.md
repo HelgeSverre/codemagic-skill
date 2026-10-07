@@ -16,7 +16,7 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/) first and
 ensure `uvx` is on the host's PATH. The plugin runs this pinned command:
 
 ```sh
-uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.1' codemagic-mcp
 ```
 
 uvx fetches and caches the package plus its MCP dependencies. It can download a
@@ -69,8 +69,8 @@ For a skills-only installation or a client without plugin MCP support, register
 an uvx command directly. Configure only the client you use:
 
 ```sh
-claude mcp add --scope user --transport stdio codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
-codex mcp add codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
+claude mcp add --scope user --transport stdio codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.1' codemagic-mcp
+codex mcp add codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.1' codemagic-mcp
 ```
 
 For standalone Codex, add variable **names**, not values, under
@@ -87,7 +87,7 @@ Clients accepting the common `mcpServers` JSON shape can use:
   "mcpServers": {
     "codemagic": {
       "command": "uvx",
-      "args": ["--isolated", "--python", ">=3.11", "--from", "codemagic-agent-tools[mcp]==1.3.0", "codemagic-mcp"]
+      "args": ["--isolated", "--python", ">=3.11", "--from", "codemagic-agent-tools[mcp]==1.3.1", "codemagic-mcp"]
     }
   }
 }
@@ -129,7 +129,7 @@ changes stored credentials.
 
 Desktop apps may not inherit terminal exports. Launch the host from a shell
 with the token exported, use its environment forwarding settings, or run
-`uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools==1.3.0' codemagic-api auth login`
+`uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools==1.3.1' codemagic-api auth login`
 in your terminal on macOS/Linux. That hidden prompt
 stores a plaintext token restricted to your user (mode 0600). Windows requires
 environment authentication. Do not paste tokens into chat or checked-in config.
@@ -137,6 +137,29 @@ environment authentication. Do not paste tokens into chat or checked-in config.
 Use saved Codemagic variable groups for signing secrets. If you pass environment
 variables or workflow inputs as tool arguments, the host can record those
 arguments even though this server redacts their values from results.
+
+## Claude suspends with `suspended (tty input)`
+
+Check older custom MCP launchers for `zsh -ic` or `zsh -ilc`. Interactive zsh
+enables job control and can briefly take the host's foreground terminal during
+startup, even with piped stdin/stdout. Claude's next terminal read then triggers
+`SIGTTIN`; terminal capability replies such as `>|ghostty ...` can leak into the
+shell prompt afterward. See [zsh's MONITOR option](https://zsh.sourceforge.io/Doc/Release/Options.html#index-MONITOR).
+
+The bundled native MCP declarations launch `uvx` directly. Keep those declarations
+and use environment forwarding or saved login for credentials. For an existing
+custom launcher that must load zsh exports, change `zsh -ic` to `zsh +m -ic`
+(or `zsh -ilc` to `zsh +m -ilc`). The option must precede shell startup; adding
+`set +m` inside the command is too late. Preserve its stdout routing so shell
+startup messages go to stderr and MCP JSON alone goes to stdout. Restart the
+affected host session after the repair; changing the file cannot fix a shell
+that already took terminal control.
+
+For CLI calls needing shell-only credentials, the skill bundles
+`skills/codemagic/scripts/with_zsh_env.sh`. Invoke it with `sh`, followed by the
+command and its separate arguments. It disables child job control and preserves
+stdin, command stdout, exit status, and argument boundaries. Updating the plugin
+does not rewrite existing custom launchers; use `codemagic-setup` to repair them.
 
 ## Tools
 

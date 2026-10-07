@@ -14,7 +14,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 BASE = "https://codemagic.io/api/v3"
 LEGACY = "https://api.codemagic.io"
 TOKEN_ENV = ("CODEMAGIC_API_KEY", "CODEMAGIC_API_TOKEN", "CM_API_TOKEN")

@@ -8,7 +8,7 @@
       "name": "codemagic",
       "source": "./",
       "description": "Unofficial Codemagic build operations and iOS/Android signing guidance for coding agents.",
-      "version": "1.3.0"
+      "version": "1.3.1"
     }
   ],
   "description": "Unofficial Codemagic CI/CD tools for AI coding agents."

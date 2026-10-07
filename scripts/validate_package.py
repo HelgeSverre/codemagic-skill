@@ -73,7 +73,7 @@ def validate():
         for link in re.findall(r"\]\((references/[^)]+)\)", text):
             assert (skill / link).is_file(), f"Missing skill reference: {link}"
     for path in (ROOT / "skills").rglob("*"):
-        if path.is_file() and path.suffix in (".md", ".py", ".yaml"):
+        if path.is_file() and path.suffix in (".md", ".py", ".sh", ".yaml"):
             contents = path.read_text()
             assert "/Users/" not in contents, f"Machine-specific path in {path}"
     for path in (ROOT / ".github/workflows").glob("*.yml"):
