@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codemagic Signing"
+  short_description: "Diagnose iOS and Android signing configuration"
+  default_prompt: "Use $codemagic-signing to check my release signing setup and identify the smallest fix."
