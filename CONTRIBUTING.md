@@ -43,6 +43,10 @@ schemas and verifies that the two marketplace catalogs resolve to the same plugi
 Archive tests extract the plugin and run the bundled CLI from another directory.
 The package CI job also runs every bundled MCP launcher against the built wheel
 using an isolated uv cache and an extracted path containing spaces.
+On macOS/Linux with zsh available, a PTY regression test checks that the extracted
+credential wrapper preserves terminal ownership during shell startup, keeps
+startup output off stdout, and forwards stdin, arguments, exports, and exit status.
+A plain interactive-zsh control must demonstrate the original terminal takeover.
 
 The vendored `schemas/plugin.schema.json` and `schemas/mcp.schema.json` follow the published
 [Agent Plugins 1.0 schema](https://agent-plugins.org/schemas/1.0.0/plugin.schema.json).

@@ -53,7 +53,7 @@ own repository/package, and update the repository guard and package URL in
    `VERSION`, and the standalone distribution test. Run `uv lock`.
 2. Let the PR checks pass and merge into `main`.
 3. Create and **publish** a GitHub release using the matching version tag, for
-   example `v1.3.0` for version `1.3.0`, targeting the merged commit on `main`.
+   example `v1.3.1` for version `1.3.1`, targeting the merged commit on `main`.
 4. Watch **Actions → Publish to PyPI**. Its build job validates manifests and
    versions, runs Ruff and offline tests, builds the wheel/sdist, checks the
    rendered-description metadata with Twine, and smoke-tests both CLI and MCP.
@@ -68,7 +68,7 @@ branch. A release published before this workflow existed must not be retagged
 just to trigger it; publish the next version instead.
 
 Pre-releases are also published when their GitHub release is published. Use a
-valid Python version such as `1.3.0rc1` and the exact matching tag `v1.3.0rc1`.
+valid Python version such as `1.3.1rc1` and the exact matching tag `v1.3.1rc1`.
 No builds run against the real Codemagic API during packaging or release tests.
 
 The plugin ZIP belongs on the GitHub release; PyPI receives only the Python
@@ -89,8 +89,8 @@ After the upload succeeds, open
 version, README, and provenance. Test from a clean environment:
 
 ```sh
-uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools==1.3.0' codemagic-api --version
-uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp --version
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools==1.3.1' codemagic-api --version
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.1' codemagic-mcp --version
 ```
 
 For persistent installation:

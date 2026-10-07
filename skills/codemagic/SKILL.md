@@ -32,7 +32,14 @@ Never print the token or put it in command arguments or chat.
 
 An agent's noninteractive shell may not inherit the user's shell environment.
 If the user has confirmed that the token is exported in zsh startup configuration,
-use an interactive zsh wrapper to run the CLI. Do not print that configuration.
+run the CLI through the bundled `scripts/with_zsh_env.sh` using `sh` and absolute
+paths resolved from this skill's directory. Pass the CLI executable and arguments
+separately, for example `sh /path/to/with_zsh_env.sh codemagic-api auth status`.
+The helper uses `zsh +m -ic` to disable job control before startup and keeps shell
+startup output on stderr. Plain `zsh -ic` can take the agent's foreground terminal
+and suspend Claude with `SIGTTIN`, even when the child's stdin/stdout are pipes.
+Do not print the startup configuration or replace native MCP launchers to load it;
+use host environment forwarding or saved login for native MCP.
 Unauthenticated `--help`, `--version`, and `--dry-run` need no token.
 
 If no token is available, have the user run `codemagic-api auth login` in their
