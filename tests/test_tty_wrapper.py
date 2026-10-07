@@ -17,16 +17,26 @@ from test_distribution import builder
 # but can still take the controlling terminal through interactive job control.
 SUPERVISOR = """
 import fcntl, json, os, subprocess, sys, termios
+from pathlib import Path
 fcntl.ioctl(0, termios.TIOCSCTTY, 0)
 before = os.tcgetpgrp(0)
-try:
-    child = subprocess.run(sys.argv[1:], input='request\\n', capture_output=True,
-                           text=True, timeout=10)
-except subprocess.TimeoutExpired as error:
-    raise RuntimeError(f'Launcher timed out: stdout={error.stdout!r}, '
-                       f'stderr={error.stderr!r}') from error
+with subprocess.Popen(sys.argv[1:], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                      stderr=subprocess.PIPE, text=True) as child:
+    try:
+        stdout, stderr = child.communicate('request\\n', timeout=10)
+    except subprocess.TimeoutExpired as error:
+        state = {}
+        for name in ('stat', 'wchan', 'syscall'):
+            path = Path(f'/proc/{child.pid}/{name}')
+            if path.exists():
+                state[name] = path.read_text()
+        child.kill()
+        stdout, stderr = child.communicate()
+        raise RuntimeError(f'Launcher timed out: foreground={before}, '
+                           f'host={os.getpgrp()}, state={state}, '
+                           f'stdout={stdout!r}, stderr={stderr!r}') from error
 print(json.dumps(dict(before=before, after=os.tcgetpgrp(0),
-                     stdout=child.stdout, stderr=child.stderr, code=child.returncode)))
+                     stdout=stdout, stderr=stderr, code=child.returncode)))
 """
 
 PROBE = """
