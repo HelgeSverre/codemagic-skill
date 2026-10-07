@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=78"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codemagic-agent-tools"
+version = "1.0.0"
+description = "Unofficial Codemagic API CLI and agent skill for Claude Code and Codex"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Helge Sverre" }]
+dependencies = []
+keywords = ["codemagic", "codex", "claude-code", "ci-cd", "agent-skills"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Build Tools",
+]
+
+[project.scripts]
+codemagic-api = "codemagic_api:main"
+
+[project.urls]
+Repository = "https://github.com/HelgeSverre/codemagic-skill"
+Issues = "https://github.com/HelgeSverre/codemagic-skill/issues"
+
+[dependency-groups]
+dev = ["ruff>=0.14", "jsonschema>=4.25", "pyyaml>=6.0"]
+
+[tool.setuptools]
+py-modules = ["codemagic_api"]
+package-dir = { "" = "skills/codemagic/scripts" }
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B017"]

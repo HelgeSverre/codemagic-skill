@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codemagic"
+  short_description: "Operate Codemagic apps, workflows, and CI builds"
+  default_prompt: "Use $codemagic to inspect my apps and latest builds."

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "codemagic",
+  "version": "1.0.0",
+  "description": "Unofficial Codemagic CI/CD tools for Claude Code and Codex: apps, workflows, builds, and artifacts.",
+  "author": {
+    "name": "Helge Sverre",
+    "url": "https://github.com/HelgeSverre"
+  },
+  "homepage": "https://github.com/HelgeSverre/codemagic-skill",
+  "repository": "https://github.com/HelgeSverre/codemagic-skill",
+  "license": "MIT",
+  "keywords": [
+    "codemagic",
+    "ci-cd",
+    "claude-code",
+    "codex",
+    "agent-skills"
+  ]
+}

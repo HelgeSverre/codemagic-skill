@@ -1,0 +1,15 @@
+{
+  "name": "codemagic-tools",
+  "owner": {
+    "name": "Helge Sverre"
+  },
+  "plugins": [
+    {
+      "name": "codemagic",
+      "source": "./",
+      "description": "Unofficial Codemagic CI/CD tools for Claude Code and Codex: apps, workflows, builds, and artifacts.",
+      "version": "1.0.0"
+    }
+  ],
+  "description": "Unofficial Codemagic CI/CD tools for AI coding agents."
+}

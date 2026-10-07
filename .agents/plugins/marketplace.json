@@ -1,0 +1,20 @@
+{
+  "name": "codemagic-tools",
+  "interface": {
+    "displayName": "Codemagic community tools"
+  },
+  "plugins": [
+    {
+      "name": "codemagic",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
