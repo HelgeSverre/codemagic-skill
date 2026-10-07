@@ -5,93 +5,120 @@ tools. The agent host launches a local process and exchanges JSON over stdio.
 There is no listening port or hosted service to deploy. It works independently
 of the skills; install the skills too for workflow and signing guidance.
 
-## Install
+## Native plugin installation
 
-Requires Python 3.11+ and the optional `mcp` dependencies. With uv:
+Current Claude Code and Codex clients automatically load this plugin's MCP
+server. Install the plugin using the [README](../README.md#install-the-plugin),
+then start a new session. Claude Code also supports `/reload-plugins`.
+No separate MCP registration or global Python package install is required.
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) first and
+ensure `uvx` is on the host's PATH. The plugin runs this pinned command:
 
 ```sh
-uv tool install 'codemagic-agent-tools[mcp] @ git+https://github.com/HelgeSverre/codemagic-skill.git'
-codemagic-mcp --help
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
 ```
 
-This installs both `codemagic-api` and `codemagic-mcp` in an isolated environment.
-Add `--upgrade` to upgrade an existing uv installation. A Git commit or tag may
-be appended to the Git URL to pin a version that includes MCP support. The
-existing v1.1.0 release predates MCP support. No PyPI package is needed.
+uvx fetches and caches the package plus its MCP dependencies. It can download a
+compatible Python interpreter unless that is disabled by local policy. Initial
+startup needs network access; later launches reuse the cache. `--isolated`
+prevents an existing global/editable uv tool from overriding the release pin.
+Append `--version` to warm the environment if a first launch times out.
 
-For the canonical local checkout:
+The portable declaration is `mcp.json` (Agent Plugins 1.0); Claude uses `.mcp.json`.
+The `.codex-plugin/plugin.json` compatibility manifest adds forwarding of
+credential environment variable names and `XDG_CONFIG_HOME`. No credential
+values are embedded. CI validates the schema and checks that all three launchers
+use the same package version. These declarations are included in the plugin ZIP.
+
+Ask the agent to use `codemagic-setup` for missing prerequisites, connection
+errors, authentication, or migration. In Claude this is
+`/codemagic:codemagic-setup`. A copied skill folder does not register MCP.
+Other hosts may load the portable MCP declaration; only Codex and Claude Code
+have been tested here for automatic MCP startup.
+
+Sources: [Agent Plugins MCP format](https://agent-plugins.org/specification),
+[Claude plugin MCP](https://code.claude.com/docs/en/plugins/components#mcp-servers),
+[Codex plugin MCP](https://learn.chatgpt.com/docs/extend/mcp#plugin-provided-mcp-servers).
+
+## Verify and migrate
+
+Inspect `/mcp` in Claude Code or the new session's MCP tools in Codex. Plugin
+server/tool names can be prefixed by the host. Call `preview_build` using app
+`aaaaaaaaaaaaaaaaaaaaaaaa`, workflow `mobile-build`, branch `feature/example`.
+Expect `sent: false`; this requires no account. Then call `auth_status` to verify
+credentials separately. Never start a live build merely to test installation.
+
+For an older manually registered server, verify these checks through the
+**plugin-provided** tools first. A custom old launcher may be supplying PATH or
+shell-only credentials; establish that access for the new host before removal.
+Remove only the old standalone entry in the client you are migrating:
+
+```sh
+claude mcp remove codemagic --scope user
+codex mcp remove codemagic
+```
+
+Restart/reload and verify the bundled tools remain connected. Do not run these
+commands for a skills-only or standalone-only installation. The plugin never
+rewrites global host settings or removes existing registrations automatically.
+
+## Standalone MCP and other clients
+
+For a skills-only installation or a client without plugin MCP support, register
+an uvx command directly. Configure only the client you use:
+
+```sh
+claude mcp add --scope user --transport stdio codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
+codex mcp add codemagic -- uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
+```
+
+For standalone Codex, add variable **names**, not values, under
+`[mcp_servers.codemagic]` in `~/.codex/config.toml`:
+
+```toml
+env_vars = ["CODEMAGIC_API_KEY", "CODEMAGIC_API_TOKEN", "CM_API_TOKEN", "XDG_CONFIG_HOME"]
+```
+
+Clients accepting the common `mcpServers` JSON shape can use:
+
+```json
+{
+  "mcpServers": {
+    "codemagic": {
+      "command": "uvx",
+      "args": ["--isolated", "--python", ">=3.11", "--from", "codemagic-agent-tools[mcp]==1.3.0", "codemagic-mcp"]
+    }
+  }
+}
+```
+
+Use an absolute executable path in host settings if uvx is not on PATH. Other
+clients may require a different enclosing key or environment-forwarding syntax.
+Remote-only connectors need a hosted HTTP server, which this package does not
+provide. The CLI remains usable without MCP or uv when Python 3.11+ is installed.
+
+## Local development
+
+The installed plugin always launches its pinned PyPI release. To develop changes
+to the server itself, run the checkout explicitly in a separate test client:
 
 ```sh
 uv sync --locked --extra mcp
 uv run --locked --extra mcp codemagic-mcp
 ```
 
-Running the server in a terminal appears to wait silently: its input is MCP
-messages. Let your agent launch it using the configurations below.
-
-## Claude Code
-
-```sh
-claude mcp add --scope user --transport stdio codemagic -- codemagic-mcp
-```
-
-Restart the session, inspect `/mcp`, and ask it to call `preview_build` using
-app `aaaaaaaaaaaaaaaaaaaaaaaa`, workflow `mobile-build`, branch `feature/example`.
-The result must contain `sent: false`. This needs no Codemagic account.
-
-This follows [Claude Code's stdio configuration](https://code.claude.com/docs/en/mcp).
-If a desktop-launched client cannot find the executable, use its absolute path
-instead of `codemagic-mcp`.
-
-## Codex
-
-```sh
-codex mcp add codemagic -- codemagic-mcp
-```
-
-For environment authentication, add the variable names under the new entry in
-`~/.codex/config.toml`, without storing their values:
-
-```toml
-[mcp_servers.codemagic]
-command = "codemagic-mcp"
-env_vars = ["CODEMAGIC_API_KEY", "CODEMAGIC_API_TOKEN", "CM_API_TOKEN", "XDG_CONFIG_HOME"]
-```
-
-Restart the session and make the same preview call. The CLI and desktop app
-share this configuration. See the official
-[MCP configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
-
-## Other local MCP clients
-
-For clients accepting the common `mcpServers` JSON format, merge this entry into
-their MCP settings. Some clients use a different enclosing key; consult that
-client's documentation.
-
-```json
-{
-  "mcpServers": {
-    "codemagic": {
-      "command": "codemagic-mcp",
-      "args": []
-    }
-  }
-}
-```
-
-Use an absolute executable path when it is not on the host's PATH. To run a
-checkout without a global installation, use `uv` as the command and arguments:
+A host can use `uv` as the command with these arguments:
 
 ```json
 ["run", "--project", "/absolute/path/to/codemagic-skill", "--locked", "--extra", "mcp", "codemagic-mcp"]
 ```
 
-The plugin ZIP also includes `skills/codemagic/scripts/codemagic_mcp.py`. With
-the optional SDK installed, that script can run directly beside
-`codemagic_api.py`; neither script needs the repository's working directory.
-The plugin does not auto-enable MCP or require uv for ordinary skill use.
-Remote-only chat connectors need a hosted HTTP server, which this package does
-not currently provide.
+Running the server in a terminal waits for MCP messages. The plugin ZIP also
+contains the Python scripts; they can run beside each other with the MCP extra
+installed. CI's `scripts/smoke_plugin_mcp.py` launches the extracted declarations
+against the locally built wheel, so an unpublished release can be tested without
+changing production configuration or needing credentials.
 
 ## Credentials
 
@@ -102,7 +129,8 @@ changes stored credentials.
 
 Desktop apps may not inherit terminal exports. Launch the host from a shell
 with the token exported, use its environment forwarding settings, or run
-`codemagic-api auth login` in your terminal on macOS/Linux. That hidden prompt
+`uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools==1.3.0' codemagic-api auth login`
+in your terminal on macOS/Linux. That hidden prompt
 stores a plaintext token restricted to your user (mode 0600). Windows requires
 environment authentication. Do not paste tokens into chat or checked-in config.
 

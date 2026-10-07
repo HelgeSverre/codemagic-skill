@@ -1,6 +1,7 @@
-include LICENSE README.md CONTRIBUTING.md plugin.json uv.lock .python-version
+include LICENSE README.md CONTRIBUTING.md plugin.json mcp.json .mcp.json uv.lock .python-version
 recursive-include skills *.md *.py *.yaml
 recursive-include .claude-plugin *.json
+recursive-include .codex-plugin *.json
 recursive-include .agents/plugins *.json
 recursive-include docs *.md *.png
 recursive-include tests *.py

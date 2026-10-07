@@ -26,6 +26,9 @@ class DistributionTests(unittest.TestCase):
             with ZipFile(archive_path) as archive:
                 self.assertIn("plugin.json", archive.namelist())
                 self.assertIn(".claude-plugin/plugin.json", archive.namelist())
+                self.assertIn(".codex-plugin/plugin.json", archive.namelist())
+                self.assertIn("mcp.json", archive.namelist())
+                self.assertIn(".mcp.json", archive.namelist())
                 self.assertFalse(
                     any("__pycache__" in name or ".env" in name for name in archive.namelist())
                 )
@@ -82,7 +85,7 @@ class DistributionTests(unittest.TestCase):
                 text=True,
                 check=True,
             )
-            self.assertEqual(result.stdout.strip(), "1.2.0")
+            self.assertEqual(result.stdout.strip(), "1.3.0")
 
     def test_environment_auth_on_all_platforms(self):
         from unittest.mock import patch

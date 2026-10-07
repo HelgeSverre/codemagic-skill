@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "codemagic": {
+      "command": "uvx",
+      "args": [
+        "--isolated",
+        "--python",
+        ">=3.11",
+        "--from",
+        "codemagic-agent-tools[mcp]==1.3.0",
+        "codemagic-mcp"
+      ]
+    }
+  }
+}

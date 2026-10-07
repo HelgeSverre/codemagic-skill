@@ -47,11 +47,13 @@ own repository/package, and update the repository guard and package URL in
 ## Release process
 
 1. Update the version in `pyproject.toml`, `plugin.json`,
-   `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, the CLI's
+   `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`,
+   `.claude-plugin/marketplace.json`, all MCP launcher package pins, the setup
+   skill and documentation examples, the CLI's
    `VERSION`, and the standalone distribution test. Run `uv lock`.
 2. Let the PR checks pass and merge into `main`.
 3. Create and **publish** a GitHub release using the matching version tag, for
-   example `v1.2.0` for version `1.2.0`, targeting the merged commit on `main`.
+   example `v1.3.0` for version `1.3.0`, targeting the merged commit on `main`.
 4. Watch **Actions → Publish to PyPI**. Its build job validates manifests and
    versions, runs Ruff and offline tests, builds the wheel/sdist, checks the
    rendered-description metadata with Twine, and smoke-tests both CLI and MCP.
@@ -75,15 +77,20 @@ the ZIP and Python packages. The publishing workflow's separate
 `pypi-distributions` artifact contains only Python packages. Do not upload the
 plugin ZIP to PyPI.
 
-## Verify the first publication
+Wait for the PyPI upload and an isolated uvx version check to succeed before
+announcing the release or updating installed plugins. The new plugin pins the
+matching PyPI version and cannot start MCP until that version is published.
+If publishing fails, repair the release workflow before promoting the plugin.
+
+## Verify publication
 
 After the upload succeeds, open
 [the PyPI project](https://pypi.org/project/codemagic-agent-tools/) and check the
 version, README, and provenance. Test from a clean environment:
 
 ```sh
-uvx --from 'codemagic-agent-tools==1.2.0' codemagic-api --version
-uvx --from 'codemagic-agent-tools[mcp]==1.2.0' codemagic-mcp --version
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools==1.3.0' codemagic-api --version
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp --version
 ```
 
 For persistent installation:

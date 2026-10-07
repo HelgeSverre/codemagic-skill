@@ -53,6 +53,10 @@ jobs:
         run: uv run --no-project --isolated --with dist/pypi/*.whl codemagic-api --version
       - name: Smoke test MCP from the wheel with optional dependencies
         run: uv run --no-project --isolated --with "$(find dist/pypi -name '*.whl')[mcp]" python -c "from codemagic_mcp import create_server; create_server()"
+      - name: Verify bundled MCP launchers against the built wheel
+        run: |
+          uv run --locked --extra mcp python scripts/build_plugin.py --output-dir dist/plugin
+          uv run --locked --extra mcp python scripts/smoke_plugin_mcp.py --plugin dist/plugin/codemagic-plugin-*.zip --wheel-dir dist/pypi
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pypi-distributions

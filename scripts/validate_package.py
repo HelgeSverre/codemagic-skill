@@ -23,6 +23,36 @@ def validate():
     assert version == project["version"] == manifest["version"] == claude["version"]
     assert manifest["name"] == claude["name"] == "codemagic"
     assert {k: v for k, v in manifest.items() if k != "$schema"} == claude
+    codex = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
+    assert {k: v for k, v in codex.items() if k != "mcpServers"} == claude
+    portable_mcp = json.loads((ROOT / "mcp.json").read_text())
+    mcp_schema = json.loads((ROOT / "schemas/mcp.schema.json").read_text())
+    jsonschema.validate(portable_mcp, mcp_schema)
+    claude_mcp = json.loads((ROOT / ".mcp.json").read_text())
+    expected_server = {
+        "command": "uvx",
+        "args": [
+            "--isolated",
+            "--python",
+            ">=3.11",
+            "--from",
+            f"codemagic-agent-tools[mcp]=={version}",
+            "codemagic-mcp",
+        ],
+    }
+    assert portable_mcp["mcpServers"] == {"codemagic": {"type": "stdio", **expected_server}}
+    assert claude_mcp == {"mcpServers": {"codemagic": expected_server}}
+    assert codex["mcpServers"] == {
+        "codemagic": {
+            **expected_server,
+            "env_vars": [
+                "CODEMAGIC_API_KEY",
+                "CODEMAGIC_API_TOKEN",
+                "CM_API_TOKEN",
+                "XDG_CONFIG_HOME",
+            ],
+        }
+    }
     for name in (".agents/plugins/marketplace.json", ".claude-plugin/marketplace.json"):
         catalog = json.loads((ROOT / name).read_text())
         assert catalog["name"] == "codemagic-tools"
