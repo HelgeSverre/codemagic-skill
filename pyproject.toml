@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codemagic-agent-tools"
-version = "1.0.0"
-description = "Unofficial Codemagic API CLI and agent skill for Claude Code and Codex"
+version = "1.1.0"
+description = "Unofficial Codemagic API CLI and mobile signing skills for coding agents"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
