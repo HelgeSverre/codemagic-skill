@@ -7,15 +7,15 @@ in Claude Code and Codex. None of those checks needs a live build mutation.
 ## Repeatable local checks
 
 ```sh
-uv sync --locked
-uv run ruff check .
-uv run ruff format --check .
-uv run python -m unittest discover -s tests -v
-uv run python scripts/validate_package.py
+uv sync --locked --extra mcp
+uv run --extra mcp ruff check .
+uv run --extra mcp ruff format --check .
+uv run --extra mcp python -m unittest discover -s tests -v
+uv run --extra mcp python scripts/validate_package.py
 claude plugin validate --strict .
 claude plugin validate --strict .claude-plugin/plugin.json
 uv build
-uv run python scripts/build_plugin.py
+uv run --extra mcp python scripts/build_plugin.py
 ```
 
 The tests run the bundled CLI after copying only the skill, and after extracting
@@ -109,3 +109,28 @@ new skill's platform reference. Neither had account access or mutation permissio
 These checks exercise diagnosis and scope decisions. They do not prove an actual
 app was signed, a store accepted a new configuration, or that the skill
 outperforms an agent without it. No real signing material was used.
+
+## MCP verification
+
+Verified on macOS on **2026-10-07** with the MCP feature branch:
+
+| Surface | Result |
+| --- | --- |
+| Official MCP Python SDK 2.3.0 (lockfile) | All 26 CLI, MCP, and distribution tests passed |
+| Minimum supported SDK 2.2.0 | All seven MCP tests passed |
+| Stdio protocol | Extracted plugin served 11 tools to current and legacy clients from a path containing spaces |
+| Claude Code 2.1.291 | Connected and directly called `mcp__codemagic__preview_build`; returned `sent: false` |
+| Codex CLI 0.160.1 | Connected and directly called `codemagic.preview_build`; returned `sent: false` |
+| Installed wheel | CLI ran without the extra; MCP server loaded with the extra |
+| Live Codemagic reads | MCP `auth_status` and `list_teams` succeeded using environment authentication |
+
+The actual agent transcripts contain MCP tool calls, not CLI commands. Both
+clients used synthetic app `aaaaaaaaaaaaaaaaaaaaaaaa`, workflow `mobile-build`,
+and branch `feature/mcp-check`. Their requests used only `preview_build`.
+No live build was started or canceled. Local transcripts and authentication
+configuration are excluded from the repository.
+
+The server was registered in both clients' user configuration for future
+sessions. These checks do not establish support for hosted HTTP connectors or
+Claude Desktop; installation recipes for untested hosts are examples only.
+See [MCP setup](mcp.md) to repeat the tests or register the server.

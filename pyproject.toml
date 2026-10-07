@@ -20,16 +20,22 @@ classifiers = [
 
 [project.scripts]
 codemagic-api = "codemagic_api:main"
+codemagic-mcp = "codemagic_mcp:main"
 
 [project.urls]
 Repository = "https://github.com/HelgeSverre/codemagic-skill"
 Issues = "https://github.com/HelgeSverre/codemagic-skill/issues"
 
+[project.optional-dependencies]
+mcp = [
+    "mcp>=2.2,<3",
+]
+
 [dependency-groups]
 dev = ["ruff>=0.14", "jsonschema>=4.25", "pyyaml>=6.0"]
 
 [tool.setuptools]
-py-modules = ["codemagic_api"]
+py-modules = ["codemagic_api", "codemagic_mcp"]
 package-dir = { "" = "skills/codemagic/scripts" }
 
 [tool.ruff]

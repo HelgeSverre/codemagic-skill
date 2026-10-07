@@ -17,10 +17,10 @@ jobs:
         with:
           version: "0.12.18"
           enable-cache: true
-      - run: uv sync --locked
-      - run: uv run --locked ruff check .
-      - run: uv run --locked ruff format --check .
-      - run: uv run --locked python scripts/validate_package.py
+      - run: uv sync --locked --extra mcp
+      - run: uv run --locked --extra mcp ruff check .
+      - run: uv run --locked --extra mcp ruff format --check .
+      - run: uv run --locked --extra mcp python scripts/validate_package.py
 
   test:
     strategy:
@@ -36,9 +36,9 @@ jobs:
           version: "0.12.18"
           python-version: ${{ matrix.python }}
           enable-cache: true
-      - run: uv sync --locked
-      - run: uv run --locked python -m unittest discover -s tests -v
-      - run: uv run --locked codemagic-api --help
+      - run: uv sync --locked --extra mcp
+      - run: uv run --locked --extra mcp python -m unittest discover -s tests -v
+      - run: uv run --locked --extra mcp codemagic-api --help
 
   package:
     runs-on: ubuntu-latest
@@ -47,11 +47,13 @@ jobs:
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           version: "0.12.18"
-      - run: uv sync --locked
+      - run: uv sync --locked --extra mcp
       - run: uv build
-      - run: uv run --locked python scripts/build_plugin.py
+      - run: uv run --locked --extra mcp python scripts/build_plugin.py
       - name: Smoke test the installed wheel
         run: uv run --no-project --isolated --with dist/*.whl codemagic-api --version
+      - name: Smoke test MCP from the installed wheel
+        run: uv run --no-project --isolated --with "$(find dist -name '*.whl')[mcp]" python -c "from codemagic_mcp import create_server; create_server()"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: distributions

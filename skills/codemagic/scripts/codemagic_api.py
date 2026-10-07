@@ -206,6 +206,74 @@ def json_object(path):
     return value
 
 
+def build_payload(
+    workflow_id,
+    *,
+    branch=None,
+    tag=None,
+    inputs=None,
+    environment=None,
+    labels=None,
+    instance_type=None,
+):
+    """Validate a v3 build request without authentication or network access."""
+    if (branch is None) == (tag is None):
+        raise ClientError("Specify exactly one of branch or tag.")
+    for value in (workflow_id, branch, tag, instance_type):
+        if value is not None and (not isinstance(value, str) or not value.strip()):
+            raise ClientError("Workflow, branch, tag, and instance type must be nonempty strings.")
+    if inputs is not None and not isinstance(inputs, dict):
+        raise ClientError("Inputs must be an object.")
+    if environment is not None and not isinstance(environment, dict):
+        raise ClientError("Environment must be an object.")
+    if labels is not None and (
+        not isinstance(labels, list)
+        or not all(isinstance(value, str) and value.strip() for value in labels)
+    ):
+        raise ClientError("Labels must be a list of nonempty strings.")
+    body = {"workflow_id": workflow_id}
+    body.update(
+        {
+            key: value
+            for key, value in (("branch", branch), ("tag", tag), ("instance_type", instance_type))
+            if value is not None
+        }
+    )
+    if labels:
+        body["labels"] = labels
+    if inputs is not None:
+        body["inputs"] = inputs
+        if any(
+            not re.fullmatch(r"[a-zA-Z]\w*", k, flags=re.ASCII)
+            or type(v) not in (str, bool, int, float)
+            for k, v in body["inputs"].items()
+        ):
+            raise ClientError("Inputs must have valid names and string, boolean, or number values.")
+    if environment is not None:
+        body["environment"] = environment
+        env = body["environment"]
+        if set(env) - {"variables", "groups", "software_versions"}:
+            raise ClientError(
+                "Environment keys must be variables, groups, or software_versions (v3 names)."
+            )
+        for key in ("variables", "software_versions"):
+            if key in env and (
+                not isinstance(env[key], dict)
+                or not all(isinstance(v, str) for v in env[key].values())
+            ):
+                raise ClientError(f"environment.{key} must be an object with string values.")
+        if "groups" in env and (
+            not isinstance(env["groups"], list)
+            or not all(isinstance(v, str) and v.strip() for v in env["groups"])
+        ):
+            raise ClientError("environment.groups must be a list of nonempty strings.")
+    try:
+        json.dumps(body, allow_nan=False)
+    except (ValueError, TypeError):
+        raise ClientError("Build values must be valid JSON with finite numbers.") from None
+    return body
+
+
 def parser():
     p = argparse.ArgumentParser(
         prog="codemagic-api",
@@ -353,44 +421,15 @@ def run(args):
         result = request("GET", path)
         return {"data": result["data"]["artifacts"]} if command == "artifacts" else result
     if command == "start":
-        body = {"workflow_id": args.workflow}
-        body.update(
-            {
-                key: getattr(args, key)
-                for key in ("branch", "tag", "instance_type")
-                if getattr(args, key) is not None
-            }
+        body = build_payload(
+            args.workflow,
+            branch=args.branch,
+            tag=args.tag,
+            labels=args.label,
+            instance_type=args.instance_type,
+            inputs=json_object(args.inputs_file) if args.inputs_file else None,
+            environment=json_object(args.environment_file) if args.environment_file else None,
         )
-        if args.label:
-            body["labels"] = args.label
-        if args.inputs_file:
-            body["inputs"] = json_object(args.inputs_file)
-            if any(
-                not re.fullmatch(r"[a-zA-Z]\w*", k, flags=re.ASCII)
-                or type(v) not in (str, bool, int, float)
-                for k, v in body["inputs"].items()
-            ):
-                raise ClientError(
-                    "Inputs must have valid names and string, boolean, or number values."
-                )
-        if args.environment_file:
-            body["environment"] = json_object(args.environment_file)
-            env = body["environment"]
-            if set(env) - {"variables", "groups", "software_versions"}:
-                raise ClientError(
-                    "Environment keys must be variables, groups, or software_versions (v3 names)."
-                )
-            for key in ("variables", "software_versions"):
-                if key in env and (
-                    not isinstance(env[key], dict)
-                    or not all(isinstance(v, str) for v in env[key].values())
-                ):
-                    raise ClientError(f"environment.{key} must be an object with string values.")
-            if "groups" in env and (
-                not isinstance(env["groups"], list)
-                or not all(isinstance(v, str) and v.strip() for v in env["groups"])
-            ):
-                raise ClientError("environment.groups must be a list of nonempty strings.")
         return request("POST", f"/apps/{args.app}/builds", body, dry_run=args.dry_run)
     if command == "cancel":
         return request("POST", f"/builds/{args.build_id}/cancel", legacy=True, dry_run=args.dry_run)

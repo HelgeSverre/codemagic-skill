@@ -2,23 +2,24 @@
 
 The Git repository is the canonical source. Keep the API implementation at
 `skills/codemagic/scripts/codemagic_api.py`; the Python package entry point and
-both agent plugins use this same file. The skill must remain usable when its
+both agent plugins use this same file. The optional MCP adapter lives beside it
+in `codemagic_mcp.py` and shares authentication, HTTP handling, and build validation. The skill must remain usable when its
 folder is copied on its own, without the rest of the repository.
 
 ## Local setup
 
 ```sh
-uv sync --locked
-uv run ruff check .
-uv run ruff format .
-uv run python -m unittest discover -s tests -v
-uv run python scripts/validate_package.py
+uv sync --locked --extra mcp
+uv run --extra mcp ruff check .
+uv run --extra mcp ruff format .
+uv run --extra mcp python -m unittest discover -s tests -v
+uv run --extra mcp python scripts/validate_package.py
 ```
 
 To develop the command globally from this checkout:
 
 ```sh
-uv tool install --editable .
+uv tool install --editable '.[mcp]'
 ```
 
 For a standalone skill installation, link `skills/codemagic` into
@@ -34,7 +35,8 @@ relevant to the requested account.
 ## Tests and releases
 
 Tests mock HTTP responses and cover request contracts, credential precedence,
-redaction, cancellation, pagination, and uncertain request outcomes. Package
+redaction, cancellation, pagination, and uncertain request outcomes. MCP tests also
+exercise schemas, tool annotations, and stdio with current and legacy handshakes. Package
 validation checks the portable manifest against the vendored Agent Plugins
 schema and verifies that the two marketplace catalogs resolve to the same plugin.
 Archive tests extract the plugin and run the bundled CLI from another directory.
@@ -53,7 +55,7 @@ Keep versions aligned in `pyproject.toml`, `plugin.json`,
 
 ```sh
 uv build
-uv run python scripts/build_plugin.py
+uv run --extra mcp python scripts/build_plugin.py
 ```
 
 Publish the GitHub repository or attach the plugin ZIP and Python distributions

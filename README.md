@@ -14,7 +14,8 @@ app, select a workflow, start a build from a branch or tag, inspect the result,
 and locate its artifacts—all through the official Codemagic REST API.
 
 The API skill's bundled Python CLI has **zero runtime dependencies** and also
-runs on its own. No MCP server or background service is required.
+runs on its own. An optional [MCP server](#mcp-tools) exposes the same API as
+typed agent tools. No hosted service or PyPI publication is required.
 
 The package contains two portable skills:
 
@@ -113,6 +114,31 @@ entries. Codex also supports `~/.codex/skills` in installations that use that
 location. For development, symlink the skill directory to keep the checkout
 canonical; see [Contributing](CONTRIBUTING.md).
 
+## MCP tools
+
+Use the optional MCP server when you want your agent to call tools directly.
+Install it once with [uv](https://docs.astral.sh/uv/):
+
+```sh
+uv tool install 'codemagic-agent-tools[mcp] @ git+https://github.com/HelgeSverre/codemagic-skill.git'
+claude mcp add --scope user --transport stdio codemagic -- codemagic-mcp
+codex mcp add codemagic -- codemagic-mcp
+```
+
+Configure only the clients you use. The agent starts `codemagic-mcp` on demand
+as a local stdio process. It uses the same `CODEMAGIC_API_KEY` or saved login as
+the CLI. For Codex, add `env_vars = ["CODEMAGIC_API_KEY"]` under
+`[mcp_servers.codemagic]` when using environment authentication.
+
+Tools cover authentication status, teams, apps, workflows, builds, steps,
+artifacts, build previews, build starts and cancellation. Previews require no
+credentials and send no requests. Installing the skill/plugin alone keeps the
+MCP server optional; adding it does not duplicate the skills.
+
+See [MCP setup](docs/mcp.md) for JSON configuration, local development, credentials,
+the tool list, and verification. The MCP extra requires the official Python MCP
+SDK; the CLI still needs only Python 3.11+.
+
 ## Authentication
 
 Create a personal API token in Codemagic under **Teams → Personal Account →
@@ -206,17 +232,17 @@ version differences, and endpoint mappings.
 ## Development and verification
 
 ```sh
-uv sync --locked
-uv run ruff check .
-uv run ruff format --check .
-uv run python -m unittest discover -s tests -v
-uv run python scripts/validate_package.py
+uv sync --locked --extra mcp
+uv run --extra mcp ruff check .
+uv run --extra mcp ruff format --check .
+uv run --extra mcp python -m unittest discover -s tests -v
+uv run --extra mcp python scripts/validate_package.py
 uv build
-uv run python scripts/build_plugin.py
+uv run --extra mcp python scripts/build_plugin.py
 ```
 
 CI runs lint, formatting, package validation, and offline tests on macOS, Linux,
-and Windows. It also builds the Python wheel/sdist and distributable plugin ZIP.
+and Windows, including MCP discovery and calls over stdio. It also builds the Python wheel/sdist and distributable plugin ZIP.
 It does not need a Codemagic token and never starts a real build.
 
 See [compatibility verification](docs/compatibility.md) for the tested clients,
