@@ -36,6 +36,12 @@ Authenticated operations additionally need the user's Codemagic token. Discovery
 checks do not establish credential propagation, hosted-agent support, successful
 builds, or native signing tools on every platform.
 
+Version 1.3.0 adds automatic plugin MCP startup in Codex and Claude Code, plus
+the portable `codemagic-setup` skill. Skills-only installers do not register MCP;
+use that skill for prerequisites and host-specific registration. See
+[MCP setup](mcp.md) and the [verification record](compatibility.md) for the tested
+scope. The earlier discovery results below concern skills, not automatic MCP.
+
 ## Native installation recipes
 
 **Copilot CLI** recognizes the existing root `plugin.json` and `skills/`; it can

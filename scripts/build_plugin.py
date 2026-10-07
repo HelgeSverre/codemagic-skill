@@ -17,7 +17,10 @@ def build(destination):
         ROOT / name
         for name in (
             "plugin.json",
+            "mcp.json",
+            ".mcp.json",
             ".claude-plugin/plugin.json",
+            ".codex-plugin/plugin.json",
             "LICENSE",
             "README.md",
             "CONTRIBUTING.md",

@@ -134,3 +134,26 @@ The server was registered in both clients' user configuration for future
 sessions. These checks do not establish support for hosted HTTP connectors or
 Claude Desktop; installation recipes for untested hosts are examples only.
 See [MCP setup](mcp.md) to repeat the tests or register the server.
+
+## Automatic plugin MCP (1.3.0)
+
+Verified on macOS on **2026-10-07** with uv 0.12.18:
+
+| Surface | Result |
+| --- | --- |
+| Claude Code 2.1.291 | Loaded an extracted plugin through `--plugin-dir`; `plugin:codemagic:codemagic` connected and its namespaced `preview_build` returned `sent: false` |
+| Codex CLI 0.160.1 | Installed the extracted plugin from a temporary local marketplace; a fresh session with only that plugin enabled called its MCP `preview_build`, returning `sent: false` |
+| Package verification | All three launcher declarations ran version 1.3.0 through uvx, discovered 11 tools, passed an offline preview, and correctly reported missing authentication |
+| Validation | All 26 existing tests, Ruff, strict Claude manifest validation, setup-skill validation, Agent Plugins MCP schema checks, and Twine passed |
+
+The native client transcripts contain actual MCP calls. Codex ignored the user's
+usual config during the test, so the previous standalone server could not satisfy
+the request. Claude called `mcp__plugin_codemagic_codemagic__preview_build`.
+Before publication, `UV_FIND_LINKS` pointed to the locally built wheel; the
+temporary Codex compatibility manifest forwarded that test-only variable. The
+published manifests resolve the identical version pin through PyPI and do not
+forward that test variable. These checks did not start or cancel a build.
+
+CI repeats extracted-plugin launcher checks using the built wheel and a fresh
+uv cache. Real-host registration is a separate manual smoke test; CI does not
+claim to run authenticated Codex or Claude sessions on every operating system.

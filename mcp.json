@@ -1,0 +1,17 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "codemagic": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--isolated",
+        "--python",
+        ">=3.11",
+        "--from",
+        "codemagic-agent-tools[mcp]==1.3.0",
+        "codemagic-mcp"
+      ]
+    }
+  }
+}

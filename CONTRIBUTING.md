@@ -39,10 +39,12 @@ Tests mock HTTP responses and cover request contracts, credential precedence,
 redaction, cancellation, pagination, and uncertain request outcomes. MCP tests also
 exercise schemas, tool annotations, and stdio with current and legacy handshakes.
 Package validation checks the portable manifest against the vendored Agent Plugins
-schema and verifies that the two marketplace catalogs resolve to the same plugin.
+schemas and verifies that the two marketplace catalogs resolve to the same plugin.
 Archive tests extract the plugin and run the bundled CLI from another directory.
+The package CI job also runs every bundled MCP launcher against the built wheel
+using an isolated uv cache and an extracted path containing spaces.
 
-The vendored `schemas/plugin.schema.json` is the published
+The vendored `schemas/plugin.schema.json` and `schemas/mcp.schema.json` follow the published
 [Agent Plugins 1.0 schema](https://agent-plugins.org/schemas/1.0.0/plugin.schema.json).
 Refresh it deliberately when changing the manifest format, and rerun validation.
 
@@ -51,7 +53,8 @@ changing skill discovery, manifests, or bundled paths. Use synthetic IDs and
 `--dry-run`; a live start/cancel is not needed to verify packaging.
 
 Keep versions aligned in `pyproject.toml`, `plugin.json`,
-`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and the CLI's
+`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`,
+`.claude-plugin/marketplace.json`, all MCP launcher pins and setup examples, and the CLI's
 `VERSION` constant. Run `uv lock` after changing project metadata or dependencies.
 
 ```sh

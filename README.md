@@ -7,19 +7,23 @@
 [![uv](https://img.shields.io/badge/managed_with-uv-DE5FE9)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/badge/lint%20%26%20format-Ruff-D7FF64)](https://docs.astral.sh/ruff/)
 [![Claude Code + Codex](https://img.shields.io/badge/agents-Claude_Code_%2B_Codex-F97316)](#install-the-plugin)
+[![PyPI](https://img.shields.io/pypi/v/codemagic-agent-tools)](https://pypi.org/project/codemagic-agent-tools/)
 [![MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/HelgeSverre/codemagic-skill/blob/main/LICENSE)
 
 Give your coding agent the tools to operate your Codemagic builds. Find an
 app, select a workflow, start a build from a branch or tag, inspect the result,
 and locate its artifacts—all through the official Codemagic REST API.
 
-The API skill's bundled Python CLI has **zero runtime dependencies** and also
-runs on its own. An optional [MCP server](#mcp-tools) exposes the same API as
-typed agent tools. No hosted service or PyPI publication is required.
+Claude Code and Codex plugin installs include [MCP tools](#mcp-tools) automatically.
+The host launches a version-pinned Python server through uvx, which fetches its
+dependencies from PyPI on first connection. No hosted service is needed.
+The bundled CLI also runs independently with **zero runtime dependencies**.
 
-The package contains two portable skills:
+The package contains three portable skills:
 
 - **`codemagic`** operates apps, workflows, builds and artifacts.
+- **`codemagic-setup`** installs prerequisites, verifies MCP/authentication, and
+  helps migrate an older manual server registration.
 - **`codemagic-signing`** diagnoses iOS/Android signing and helps configure an
   existing project while preserving its signing identity. It distinguishes
   provisioning, Gradle wiring, store permissions and runtime certificate issues.
@@ -36,9 +40,11 @@ tool. It does not provision account credentials or start builds merely by loadin
 
 ## Install the plugin
 
-API commands require Python 3.11+ and normal shell access. Use a current client
-with the skill or plugin support described below. The package includes the CLI;
-agents can run the bundled script directly.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and make
+`uvx` available on the agent host's PATH. Use a current Codex or Claude Code client.
+The first MCP connection needs network access to download the pinned package;
+uv can also provide Python 3.11+ if needed. Skills-only CLI use needs Python
+3.11+ and normal shell access, without uv or the MCP dependencies.
 
 ### Claude Code
 
@@ -47,8 +53,10 @@ claude plugin marketplace add HelgeSverre/codemagic-skill
 claude plugin install codemagic@codemagic-tools
 ```
 
-Start a new session and use `/codemagic:codemagic`, or ask a Codemagic question.
-For a local checkout, try `claude --plugin-dir /path/to/codemagic-skill`.
+Start a new session (or `/reload-plugins`) and inspect `/mcp`. The plugin's
+server connects automatically. Use `/codemagic:codemagic` for builds, or
+`/codemagic:codemagic-setup` for setup help. For a local checkout, try
+`claude --plugin-dir /path/to/codemagic-skill`.
 
 ### Codex
 
@@ -57,8 +65,9 @@ codex plugin marketplace add HelgeSverre/codemagic-skill
 codex plugin add codemagic@codemagic-tools
 ```
 
-Start a new session and select the `codemagic` skill from the plugin. You can
-also ask directly: “Use the Codemagic skill to list my apps.”
+Start a new session to load the bundled MCP tools and skills. Ask “Use Codemagic
+to list my apps” or “Use codemagic-setup to check my installation.” The plugin
+forwards `CODEMAGIC_API_KEY` when it is present in the host's environment.
 
 ### GitHub Copilot CLI
 
@@ -66,7 +75,9 @@ also ask directly: “Use the Codemagic skill to list my apps.”
 copilot plugin install HelgeSverre/codemagic-skill
 ```
 
-The existing Agent Plugins manifest and `skills/` directory work directly.
+The Agent Plugins manifest and `skills/` directory provide skill discovery.
+Automatic MCP startup has been verified in Claude Code and Codex; other hosts
+can use the setup skill and their documented MCP configuration.
 
 ### Gemini CLI
 
@@ -116,28 +127,29 @@ canonical; see [Contributing](https://github.com/HelgeSverre/codemagic-skill/blo
 
 ## MCP tools
 
-Use the optional MCP server when you want your agent to call tools directly.
-Install it once with [uv](https://docs.astral.sh/uv/):
+The Claude Code and Codex plugins register MCP automatically. A separate
+`mcp add` or `uv tool install` is unnecessary for native plugin installations.
+The bundled configuration runs:
 
 ```sh
-uv tool install 'codemagic-agent-tools[mcp] @ git+https://github.com/HelgeSverre/codemagic-skill.git'
-claude mcp add --scope user --transport stdio codemagic -- codemagic-mcp
-codex mcp add codemagic -- codemagic-mcp
+uvx --isolated --python '>=3.11' --from 'codemagic-agent-tools[mcp]==1.3.0' codemagic-mcp
 ```
 
-Configure only the clients you use. The agent starts `codemagic-mcp` on demand
-as a local stdio process. It uses the same `CODEMAGIC_API_KEY` or saved login as
-the CLI. For Codex, add `env_vars = ["CODEMAGIC_API_KEY"]` under
-`[mcp_servers.codemagic]` when using environment authentication.
+The host manages this process; running it directly waits for MCP messages.
+Append `--version` to check prerequisites and warm the dependency cache.
+If setup fails, ask your agent to use `codemagic-setup`. Authentication uses the
+same `CODEMAGIC_API_KEY` or saved login as the CLI.
 
 Tools cover authentication status, teams, apps, workflows, builds, steps,
 artifacts, build previews, build starts and cancellation. Previews require no
-credentials and send no requests. Installing the skill/plugin alone keeps the
-MCP server optional; adding it does not duplicate the skills.
+credentials and send no requests. An enabled plugin may start MCP in each
+session; a skills-only install keeps the dependency-free CLI available without
+starting an MCP process.
 
-See [MCP setup](https://github.com/HelgeSverre/codemagic-skill/blob/main/docs/mcp.md) for JSON configuration, local development, credentials,
-the tool list, and verification. The MCP extra requires the official Python MCP
-SDK; the CLI still needs only Python 3.11+.
+If you previously added a standalone `codemagic` server, verify the plugin's
+connection and authentication before removing that duplicate. See
+[MCP setup](https://github.com/HelgeSverre/codemagic-skill/blob/main/docs/mcp.md)
+for migration, other clients, local development, credentials, and verification.
 
 ## Authentication
 
@@ -164,10 +176,10 @@ plugin manifests, prompts, or shell command arguments.
 
 ## Standalone CLI
 
-Install from Git with [uv](https://docs.astral.sh/uv/):
+Install from PyPI with [uv](https://docs.astral.sh/uv/):
 
 ```sh
-uv tool install git+https://github.com/HelgeSverre/codemagic-skill.git
+uv tool install codemagic-agent-tools
 codemagic-api --help
 ```
 

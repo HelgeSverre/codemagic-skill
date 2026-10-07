@@ -12,6 +12,9 @@ operations: `auth_status`, `list_teams`, `list_apps`, `list_workflows`, `list_bu
 `preview_build` for a dry run; only `start_build` and `cancel_build` mutate builds.
 The scope, credentials, and retry guidance below apply to both interfaces.
 Use the CLI for other documented API endpoints or when MCP is unavailable.
+Native plugin installs include MCP automatically through uvx. For a requested
+installation or connection repair, use the companion `codemagic-setup` skill
+when available; copying this skill folder alone does not register an MCP server.
 
 The bundled CLI is `scripts/codemagic_api.py`, resolved relative to **this
 SKILL.md's actual installed directory**, not the working directory. Run it with
