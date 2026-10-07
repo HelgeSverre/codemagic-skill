@@ -1,9 +1,17 @@
 ---
 name: codemagic
-description: Operate Codemagic CI/CD. Use to list teams, apps and workflows, inspect build status and artifacts, start or cancel builds, or call documented Codemagic REST endpoints. Includes a dependency-free Python CLI for Claude Code, Codex, and other skill hosts.
+description: Operate Codemagic CI/CD. Use to list teams, apps and workflows, inspect build status and artifacts, start or cancel builds, or call documented Codemagic REST endpoints. Supports MCP tools and a dependency-free Python CLI for Claude Code, Codex, and other skill hosts.
 ---
 
 # Codemagic
+
+When the `codemagic` MCP server is connected, prefer its typed tools for supported
+operations: `auth_status`, `list_teams`, `list_apps`, `list_workflows`, `list_builds`,
+`get_build`, `get_build_actions`, `get_build_artifacts`, `preview_build`,
+`start_build`, and `cancel_build`. Names may be prefixed by the host. Use
+`preview_build` for a dry run; only `start_build` and `cancel_build` mutate builds.
+The scope, credentials, and retry guidance below apply to both interfaces.
+Use the CLI for other documented API endpoints or when MCP is unavailable.
 
 The bundled CLI is `scripts/codemagic_api.py`, resolved relative to **this
 SKILL.md's actual installed directory**, not the working directory. Run it with
@@ -14,7 +22,7 @@ library, returns JSON, and writes diagnostics to stderr. No MCP server is needed
 
 ## Authentication
 
-Run `codemagic-api auth status` before authenticated operations. The primary token variable is
+Run MCP `auth_status` or `codemagic-api auth status` before authenticated operations. The primary token variable is
 `CODEMAGIC_API_KEY`. Fallbacks are `CODEMAGIC_API_TOKEN`, `CM_API_TOKEN`, and
 the tool's local token file, in that order. These values all go in `x-auth-token`.
 Never print the token or put it in command arguments or chat.

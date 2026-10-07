@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codemagic-agent-tools"
-version = "1.1.0"
-description = "Unofficial Codemagic API CLI and mobile signing skills for coding agents"
+version = "1.2.0"
+description = "Unofficial Codemagic CLI, MCP server, and mobile signing skills for coding agents"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -20,16 +20,27 @@ classifiers = [
 
 [project.scripts]
 codemagic-api = "codemagic_api:main"
+codemagic-mcp = "codemagic_mcp:main"
 
 [project.urls]
 Repository = "https://github.com/HelgeSverre/codemagic-skill"
 Issues = "https://github.com/HelgeSverre/codemagic-skill/issues"
 
+[project.optional-dependencies]
+mcp = [
+    "mcp>=2.2,<3",
+]
+
 [dependency-groups]
-dev = ["ruff>=0.14", "jsonschema>=4.25", "pyyaml>=6.0"]
+dev = [
+    "ruff>=0.14",
+    "jsonschema>=4.25",
+    "pyyaml>=6.0",
+    "twine>=6.2,<7",
+]
 
 [tool.setuptools]
-py-modules = ["codemagic_api"]
+py-modules = ["codemagic_api", "codemagic_mcp"]
 package-dir = { "" = "skills/codemagic/scripts" }
 
 [tool.ruff]

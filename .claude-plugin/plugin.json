@@ -1,6 +1,6 @@
 {
   "name": "codemagic",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Unofficial Codemagic build operations and iOS/Android signing guidance for coding agents.",
   "author": {
     "name": "Helge Sverre",

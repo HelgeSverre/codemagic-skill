@@ -1,0 +1,83 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  pull_request:
+  # Manual runs validate and build only. Publishing requires a GitHub release.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pypi-${{ github.event.release.tag_name || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Validate and build Python distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.18"
+          python-version: "3.11"
+      - run: uv sync --locked --extra mcp
+      - run: uv run --locked --extra mcp python scripts/validate_package.py
+      - name: Require a matching version tag on main
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          uv run --locked --extra mcp python - <<'PY'
+          import os
+          import tomllib
+          from pathlib import Path
+
+          version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          if os.environ["RELEASE_TAG"] != f"v{version}":
+              raise SystemExit(f"Release tag must be v{version}, matching package metadata.")
+          PY
+          git merge-base --is-ancestor HEAD origin/main
+      - run: uv run --locked --extra mcp ruff check .
+      - run: uv run --locked --extra mcp ruff format --check .
+      - run: uv run --locked --extra mcp python -m unittest discover -s tests -v
+      - run: uv build --out-dir dist/pypi
+      - run: uv run --locked --extra mcp twine check --strict dist/pypi/*
+      - name: Smoke test CLI from the wheel without optional dependencies
+        run: uv run --no-project --isolated --with dist/pypi/*.whl codemagic-api --version
+      - name: Smoke test MCP from the wheel with optional dependencies
+        run: uv run --no-project --isolated --with "$(find dist/pypi -name '*.whl')[mcp]" python -c "from codemagic_mcp import create_server; create_server()"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pypi-distributions
+          path: |
+            dist/pypi/*.whl
+            dist/pypi/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Upload to PyPI
+    if: github.event_name == 'release' && github.repository == 'HelgeSverre/codemagic-skill'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/codemagic-agent-tools
+    permissions:
+      id-token: write
+    steps:
+      # No checkout or build code in the job that can obtain publishing credentials.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pypi-distributions
+          path: dist/
+      - name: Publish using Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          attestations: true
