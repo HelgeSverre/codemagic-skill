@@ -1,4 +1,4 @@
-![Codemagic Skill — builds, workflows and artifacts for AI agents](docs/assets/header.png)
+![Codemagic Skill — builds, workflows and artifacts for AI agents](https://raw.githubusercontent.com/HelgeSverre/codemagic-skill/main/docs/assets/header.png)
 
 # Codemagic Skill
 
@@ -7,7 +7,7 @@
 [![uv](https://img.shields.io/badge/managed_with-uv-DE5FE9)](https://docs.astral.sh/uv/)
 [![Ruff](https://img.shields.io/badge/lint%20%26%20format-Ruff-D7FF64)](https://docs.astral.sh/ruff/)
 [![Claude Code + Codex](https://img.shields.io/badge/agents-Claude_Code_%2B_Codex-F97316)](#install-the-plugin)
-[![MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/HelgeSverre/codemagic-skill/blob/main/LICENSE)
 
 Give your coding agent the tools to operate your Codemagic builds. Find an
 app, select a workflow, start a build from a branch or tag, inspect the result,
@@ -81,7 +81,7 @@ shell execution remain subject to Gemini's normal consent and permissions.
 ### Other agent harnesses
 
 OpenCode, Cursor, Amp, Pi, Goose and current Windsurf/Devin support the portable
-skill folder. See the [support matrix and installation recipes](docs/agent-support.md)
+skill folder. See the [support matrix and installation recipes](https://github.com/HelgeSverre/codemagic-skill/blob/main/docs/agent-support.md)
 for tested discovery results, supported paths and limitations. Cline uses its
 own documented skill directory.
 
@@ -112,7 +112,7 @@ cp -R codemagic-skill/skills/codemagic-signing ~/.agents/skills/codemagic-signin
 Use either the plugin or the standalone skill in each client to avoid duplicate
 entries. Codex also supports `~/.codex/skills` in installations that use that
 location. For development, symlink the skill directory to keep the checkout
-canonical; see [Contributing](CONTRIBUTING.md).
+canonical; see [Contributing](https://github.com/HelgeSverre/codemagic-skill/blob/main/CONTRIBUTING.md).
 
 ## MCP tools
 
@@ -135,7 +135,7 @@ artifacts, build previews, build starts and cancellation. Previews require no
 credentials and send no requests. Installing the skill/plugin alone keeps the
 MCP server optional; adding it does not duplicate the skills.
 
-See [MCP setup](docs/mcp.md) for JSON configuration, local development, credentials,
+See [MCP setup](https://github.com/HelgeSverre/codemagic-skill/blob/main/docs/mcp.md) for JSON configuration, local development, credentials,
 the tool list, and verification. The MCP extra requires the official Python MCP
 SDK; the CLI still needs only Python 3.11+.
 
@@ -211,7 +211,7 @@ codemagic-api api GET '/teams/TEAM_ID/variable-groups'
 codemagic-api api POST '/apps/APP_ID/builds' --data-file request.json --dry-run
 ```
 
-Read the [API notes](skills/codemagic/references/api.md) for payload formats,
+Read the [API notes](https://github.com/HelgeSverre/codemagic-skill/blob/main/skills/codemagic/references/api.md) for payload formats,
 version differences, and endpoint mappings.
 
 ## Behavior to know
@@ -245,13 +245,20 @@ CI runs lint, formatting, package validation, and offline tests on macOS, Linux,
 and Windows, including MCP discovery and calls over stdio. It also builds the Python wheel/sdist and distributable plugin ZIP.
 It does not need a Codemagic token and never starts a real build.
 
-See [compatibility verification](docs/compatibility.md) for the tested clients,
+The [PyPI publishing workflow](https://github.com/HelgeSverre/codemagic-skill/blob/main/docs/publishing.md)
+validates Python distributions on PRs and publishes on GitHub releases using
+Trusted Publishing. Git installation works independently of PyPI. For releases
+available on PyPI, use
+`uv tool install 'codemagic-agent-tools[mcp]'` for the CLI and MCP server, or
+`uv tool install codemagic-agent-tools` for the CLI alone.
+
+See [compatibility verification](https://github.com/HelgeSverre/codemagic-skill/blob/main/docs/compatibility.md) for the tested clients,
 test boundaries, and steps to repeat the agent checks. See
-[Contributing](CONTRIBUTING.md) for the canonical source layout.
+[Contributing](https://github.com/HelgeSverre/codemagic-skill/blob/main/CONTRIBUTING.md) for the canonical source layout.
 
 ## License and credits
 
-Code and documentation are [MIT licensed](LICENSE). The header illustration was
+Code and documentation are [MIT licensed](https://github.com/HelgeSverre/codemagic-skill/blob/main/LICENSE). The header illustration was
 AI-generated for this project using Codemagic's visual identity as inspiration.
 Codemagic names, logos, and other trademarks remain the property of their
 respective owners; the software license grants no trademark rights.
