@@ -66,6 +66,7 @@ jobs:
             dist/pypi/*.whl
             dist/pypi/*.tar.gz
           if-no-files-found: error
+          retention-days: ${{ github.ref_type == 'tag' && 90 || 7 }}
 
   publish:
     name: Upload to PyPI
